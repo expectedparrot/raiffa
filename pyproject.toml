@@ -1,0 +1,19 @@
+[project]
+name = "raiffa"
+version = "0.1.0"
+description = "JSON-first CLI for decision analysis"
+requires-python = ">=3.11"
+dependencies = [
+  "rich",
+  "typer",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+raiffa = "raiffa.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

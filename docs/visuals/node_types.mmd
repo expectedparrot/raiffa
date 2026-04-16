@@ -1,0 +1,17 @@
+flowchart TD
+  decision{Decision node}
+  chance((Chance node))
+  terminal[Terminal node]
+
+  decision -->|controlled choice| action_a[Child branch A]
+  decision -->|controlled choice| action_b[Child branch B]
+  chance -->|p=0.30| state_a[State A]
+  chance -->|p=0.70| state_b[State B]
+  terminal --> utility[Scalar vNM utility]
+
+  classDef decision fill:#e8f1ff,stroke:#2f5f9f,color:#10233f
+  classDef chance fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  classDef terminal fill:#edf7ed,stroke:#39733b,color:#173817
+  class decision decision
+  class chance chance
+  class terminal terminal

@@ -1,0 +1,19 @@
+flowchart LR
+  init[raiffa init] --> build[Build tree]
+  build --> validate[Validate assumptions]
+  validate --> solve[Rollback solve]
+  solve --> stress[Stress test]
+  stress --> report[Snapshots and exports]
+
+  build --> tree[(.raiffa trees and nodes)]
+  solve --> analyses[(.raiffa analyses)]
+  stress --> analyses
+  report --> mermaid[Mermaid diagrams]
+  report --> json[JSON output]
+
+  classDef command fill:#e8f1ff,stroke:#2f5f9f,color:#10233f
+  classDef store fill:#edf7ed,stroke:#39733b,color:#173817
+  classDef output fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  class init,build,validate,solve,stress command
+  class tree,analyses store
+  class mermaid,json output

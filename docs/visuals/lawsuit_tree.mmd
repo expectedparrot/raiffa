@@ -1,0 +1,14 @@
+flowchart TD
+  root{Choose action}
+  root -->|settle| settle_outcome[Accept settlement<br/>U=42]
+  root -->|litigate| trial_result((Trial result))
+  trial_result -->|p=0.25| win_big[Win big<br/>U=90]
+  trial_result -->|p=0.35| partial_win[Partial win<br/>U=45]
+  trial_result -->|p=0.40| lose[Lose<br/>U=-40]
+
+  classDef decision fill:#e8f1ff,stroke:#2f5f9f,color:#10233f
+  classDef chance fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  classDef terminal fill:#edf7ed,stroke:#39733b,color:#173817
+  class root decision
+  class trial_result chance
+  class settle_outcome,win_big,partial_win,lose terminal

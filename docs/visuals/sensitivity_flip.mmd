@@ -1,0 +1,14 @@
+flowchart LR
+  p10["P(major win)=0.10<br/>settle"] --> p20["0.20<br/>settle"]
+  p20 --> p30["0.30<br/>settle"]
+  p30 --> p40["0.40<br/>settle"]
+  p40 --> threshold{{flip between<br/>0.40 and 0.50}}
+  threshold --> p50["0.50<br/>litigate"]
+  p50 --> p60["0.60<br/>litigate"]
+
+  classDef settle fill:#edf7ed,stroke:#39733b,color:#173817
+  classDef litigate fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  classDef threshold fill:#f8e1df,stroke:#994038,color:#421411
+  class p10,p20,p30,p40 settle
+  class p50,p60 litigate
+  class threshold threshold

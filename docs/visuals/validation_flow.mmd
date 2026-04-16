@@ -1,0 +1,17 @@
+flowchart TD
+  validate[raiffa tree validate] --> structure{Structure ok?}
+  structure -->|no| structural_error[structured validation_error]
+  structure -->|yes| probabilities{Probabilities sum to 1?}
+  probabilities -->|no| probability_error[probability_sum error]
+  probabilities -->|yes| utilities{Terminal utilities numeric?}
+  utilities -->|no| utility_error[missing_utility error]
+  utilities -->|yes| valid[tree is valid]
+
+  classDef command fill:#e8f1ff,stroke:#2f5f9f,color:#10233f
+  classDef check fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  classDef error fill:#f8e1df,stroke:#994038,color:#421411
+  classDef ok fill:#edf7ed,stroke:#39733b,color:#173817
+  class validate command
+  class structure,probabilities,utilities check
+  class structural_error,probability_error,utility_error error
+  class valid ok

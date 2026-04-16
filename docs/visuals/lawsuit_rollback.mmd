@@ -1,0 +1,20 @@
+flowchart BT
+  win_big[Win big<br/>90]
+  partial_win[Partial win<br/>45]
+  lose[Lose<br/>-40]
+  trial_result((Trial result<br/>0.25*90 + 0.35*45 + 0.40*-40 = 22.25))
+  settle_outcome[Settle<br/>42]
+  root{Choose action<br/>max 42 vs 22.25 = 42}
+
+  win_big --> trial_result
+  partial_win --> trial_result
+  lose --> trial_result
+  trial_result --> root
+  settle_outcome --> root
+
+  classDef best fill:#dff5e1,stroke:#257a35,color:#123d1a
+  classDef rejected fill:#f8e1df,stroke:#994038,color:#421411
+  classDef chance fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  class settle_outcome,root best
+  class trial_result chance
+  class win_big,partial_win,lose rejected

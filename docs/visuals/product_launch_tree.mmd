@@ -1,0 +1,13 @@
+flowchart TD
+  launch_root{Launch decision}
+  launch_root -->|no_launch| no_launch[Do not launch<br/>U=0]
+  launch_root -->|launch| demand((Demand))
+  demand -->|p=0.30| high_demand[High demand<br/>U=120]
+  demand -->|p=0.70| low_demand[Low demand<br/>U=-20]
+
+  classDef decision fill:#e8f1ff,stroke:#2f5f9f,color:#10233f
+  classDef chance fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  classDef terminal fill:#edf7ed,stroke:#39733b,color:#173817
+  class launch_root decision
+  class demand chance
+  class no_launch,high_demand,low_demand terminal

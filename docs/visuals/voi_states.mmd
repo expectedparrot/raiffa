@@ -1,0 +1,15 @@
+flowchart TD
+  info[Observe trial result perfectly] --> win[Major win<br/>choose litigate<br/>value 90]
+  info --> partial[Partial win<br/>choose litigate<br/>value 45]
+  info --> loss[Lose<br/>choose settle<br/>value 42]
+  win --> ev[Value with information<br/>55.05]
+  partial --> ev
+  loss --> ev
+  ev --> gain[EVPPI<br/>55.05 - 42 = 13.05]
+
+  classDef info fill:#e8f1ff,stroke:#2f5f9f,color:#10233f
+  classDef action fill:#fff4d6,stroke:#9f7b18,color:#3d3005
+  classDef result fill:#edf7ed,stroke:#39733b,color:#173817
+  class info info
+  class win,partial,loss action
+  class ev,gain result
