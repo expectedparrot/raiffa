@@ -32,7 +32,18 @@ class Project:
         return self.data_dir.joinpath(*parts)
 
 
+def default_project_override() -> Path | None:
+    from os import getenv
+
+    explicit = getenv("RAIFFA_PROJECT_DIR")
+    if explicit:
+        return Path(explicit)
+    return None
+
+
 def find_project(start: Path | None = None, override: Path | None = None) -> Project:
+    if override is None:
+        override = default_project_override()
     if override is not None:
         root = override.resolve()
         data_dir = root / DATA_DIR

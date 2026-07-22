@@ -53,7 +53,18 @@ def add_chance(ctx: typer.Context, tree_id: str, node_id: str, label: str, paren
 
 
 @app.command("add-terminal")
-def add_terminal(ctx: typer.Context, tree_id: str, node_id: str, label: str, parent: str = typer.Option(..., "--parent"), branch_label: str = typer.Option(..., "--branch-label"), utility: float = typer.Option(..., "--utility")) -> None:
+def add_terminal(
+    ctx: typer.Context,
+    tree_id: str,
+    node_id: str,
+    label: str,
+    parent: str = typer.Option(..., "--parent"),
+    branch_label: str = typer.Option(..., "--branch-label"),
+    utility: float | None = typer.Option(None, "--utility", help="Optional. If omitted, set later via `raiffa utility set`."),
+) -> None:
+    # Utility is optional at creation time — the tree can be built first and
+    # parameterized later. `tree validate` and `solve` will surface any
+    # terminal still missing a utility.
     _add_node(ctx, tree_id, node_id, label, "terminal", parent, branch_label, utility)
 
 

@@ -12,12 +12,15 @@ from raiffa.core.store import write_json
 
 def command(
     ctx: typer.Context,
-    name: str = typer.Argument(...),
+    name: str = typer.Argument("."),
+    here: bool = typer.Option(False, "--here", help="Initialize .raiffa in the current directory."),
     title: str | None = typer.Option(None, "--title"),
     description: str = typer.Option("", "--description"),
 ) -> None:
-    project_id = validate_id(Path(name).name, "project id")
-    project = create_project(Path(name))
+    target = Path.cwd() if here else Path(name)
+    project_id_source = name if here else Path(name).name
+    project_id = validate_id(project_id_source, "project id")
+    project = create_project(target)
     meta = {
         "id": project_id,
         "title": title or project_id.replace("_", " ").title(),

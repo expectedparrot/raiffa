@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "raiffa"
 version = "0.1.0"
@@ -5,7 +9,7 @@ description = "JSON-first CLI for decision analysis"
 requires-python = ">=3.11"
 dependencies = [
   "rich",
-  "typer",
+  "typer"
 ]
 
 [project.optional-dependencies]
@@ -14,6 +18,14 @@ dev = ["pytest"]
 [project.scripts]
 raiffa = "raiffa.cli:main"
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["raiffa*"]
+
+[tool.setuptools.package-data]
+raiffa = ["docs_content/*.md"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

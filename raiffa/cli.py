@@ -8,7 +8,7 @@ from typing import Any
 import typer
 from rich.console import Console
 
-from raiffa.commands import analysis, dominance, export, info, init, node, prob, regret, scenario, sensitivity, solve, tree, utility, voi
+from raiffa.commands import analysis, docs, dominance, export, info, init, node, prob, regret, scenario, sensitivity, solve, tree, utility, voi
 from raiffa.core.errors import RaiffaError
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -50,6 +50,7 @@ app.command("regret")(regret.command)
 app.command("dominance")(dominance.command)
 app.add_typer(export.app, name="export")
 app.add_typer(analysis.app, name="analysis")
+app.add_typer(docs.app, name="docs")
 
 
 def main() -> None:

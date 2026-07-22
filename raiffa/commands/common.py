@@ -7,13 +7,23 @@ from typing import Any
 import typer
 
 from raiffa.core.ids import local_iso_now
-from raiffa.core.project import Project, find_project
+from raiffa.core.project import Project, default_project_override, find_project
 from raiffa.core.store import append_record
 
 
 def ctx_project(ctx: typer.Context) -> Project:
     override: Path | None = ctx.obj.project if ctx.obj else None
     return find_project(override=override)
+
+
+def resolve_project_root(ctx: typer.Context) -> Path:
+    override: Path | None = ctx.obj.project if ctx.obj else None
+    if override is not None:
+        return override.resolve()
+    default = default_project_override()
+    if default is not None:
+        return default.resolve()
+    return Path.cwd().resolve()
 
 
 def output(ctx: typer.Context, data: Any, warnings: list[dict] | None = None, human_message: str | None = None) -> None:

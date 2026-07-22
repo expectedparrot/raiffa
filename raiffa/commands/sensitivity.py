@@ -30,19 +30,21 @@ def threshold(
     ctx: typer.Context,
     tree_id: str,
     param: str = typer.Option(..., "--param"),
-    between: list[str] = typer.Option(..., "--between"),
+    between: tuple[str, str] = typer.Option(..., "--between"),
     start: float = typer.Option(0.0, "--from"),
     stop: float = typer.Option(1.0, "--to"),
     steps: int = typer.Option(101, "--steps"),
 ) -> None:
     project = ctx_project(ctx)
     result = one_way_sensitivity(load_tree_model(project, tree_id), param, start, stop, steps)
+    requested = {str(item) for item in between}
     filtered = [
         item
         for item in result["thresholds"]
-        if len(between) != 2 or {str(item["from"]), str(item["to"])} == set(between)
+        if {str(item["from"]), str(item["to"])} == requested
+        or {str(item["from_branch_label"]), str(item["to_branch_label"])} == requested
     ]
-    output(ctx, {"tree_id": tree_id, "param": param, "between": between, "thresholds": filtered})
+    output(ctx, {"tree_id": tree_id, "param": param, "between": list(between), "thresholds": filtered})
 
 
 @app.command("tornado")

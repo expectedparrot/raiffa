@@ -274,6 +274,9 @@ def set_utility_model(model: TreeModel, terminal_node_id: str, utility: float) -
 
 
 def parse_param(param: str) -> tuple[str, str, str | None]:
+    if "/" in param and not param.startswith(("probability:", "utility:")):
+        node_id, child_id = param.split("/", 1)
+        return "probability", node_id, child_id
     if param.startswith("probability:"):
         address = param.removeprefix("probability:")
         if "." not in address:
@@ -282,7 +285,10 @@ def parse_param(param: str) -> tuple[str, str, str | None]:
         return "probability", node_id, child_id
     if param.startswith("utility:"):
         return "utility", param.removeprefix("utility:"), None
-    raise UserError("Unsupported parameter address.", {"param": param})
+    raise UserError(
+        "Unsupported parameter address. Use probability:<chance_node>.<child_node> or utility:<terminal_node>.",
+        {"param": param},
+    )
 
 
 def one_way_sensitivity(model: TreeModel, param: str, start: float, stop: float, steps: int) -> dict:
