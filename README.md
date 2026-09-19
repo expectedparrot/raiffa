@@ -1,5 +1,9 @@
 # Raiffa
 
+<p align="center">
+  <img src="docs/assets/raiffa-artwork.webp" width="480" alt="Raiffa artwork: a parrot perched in a branching tree, framed by expectation brackets">
+</p>
+
 **Turn sourced beliefs into an auditable decision policy.**
 
 Raiffa models choices, uncertain outcomes, payoffs, and what is known when each

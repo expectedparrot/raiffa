@@ -1,5 +1,5 @@
 include CHANGELOG.md AGENTS.md CLAUDE.md SPEC.md
-recursive-include docs *.md *.html *.css *.js *.svg *.json
+recursive-include docs *.md *.html *.css *.js *.svg *.json *.png *.webp
 include scripts/check_tutorial.py
 recursive-include examples/leg01 *.json *.md
 prune examples/leg01/output
