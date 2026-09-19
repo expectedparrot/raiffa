@@ -8,6 +8,8 @@ from raiffa.core.model import branch_label, load_tree_model, subtree_model, solv
 
 
 def command(ctx: typer.Context, tree_id: str, criterion: str = typer.Option("expected", "--criterion")) -> None:
+    if criterion != "expected":
+        raise AnalysisError("Only expected regret is implemented; minimax regret is not supported.", {"criterion": criterion})
     model = load_tree_model(ctx_project(ctx), tree_id)
     root_id = model.root_id
     if not root_id or model.nodes[root_id].get("type") != "decision":

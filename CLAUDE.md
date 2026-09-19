@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+Current development guidance is in [AGENTS.md](AGENTS.md). The finite 0.2.0
+architecture is documented in [docs/finite-models.md](docs/finite-models.md).
+The notes below describe the retained legacy tree implementation.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands

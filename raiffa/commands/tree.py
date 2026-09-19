@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import json
 import typer
 
 from raiffa.commands.common import ctx_project, output
-from raiffa.core.errors import ValidationError
 from raiffa.core.ids import local_iso_now, validate_id
 from raiffa.core.model import load_tree_model, validate_model
 from raiffa.core.store import delete_entity, list_entities, read_entity, write_entity, write_json
@@ -44,11 +42,7 @@ def show(ctx: typer.Context, tree_id: str) -> None:
 @app.command("validate")
 def validate(ctx: typer.Context, tree_id: str, warnings_as_errors: bool = typer.Option(False, "--warnings-as-errors")) -> None:
     project = ctx_project(ctx)
-    try:
-        result = validate_model(load_tree_model(project, tree_id), warnings_as_errors=warnings_as_errors)
-    except ValidationError as exc:
-        typer.echo(json.dumps({"error": {"code": exc.code, "message": exc.message, "details": exc.details}}, indent=2, sort_keys=True), err=True)
-        raise typer.Exit(exc.exit_code) from exc
+    result = validate_model(load_tree_model(project, tree_id), warnings_as_errors=warnings_as_errors)
     output(ctx, result, warnings=result.pop("warnings", []), human_message=f"Tree {tree_id} is valid")
 
 

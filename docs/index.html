@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A hands-on Raiffa tutorial: model a settlement decision, find switching thresholds, value a study, and preserve an auditable decision memo.">
+  <meta name="color-scheme" content="light">
+  <title>Raiffa — From a belief to a defensible decision</title>
+  <link rel="stylesheet" href="assets/tutorial.css">
+  <script src="assets/tutorial.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the tutorial</a>
+<aside>
+  <a class="brand" href="#top"><span>[</span> Raiffa <span>]</span></a>
+  <p class="brand-note">Expected Parrot · decision analysis</p>
+  <nav aria-label="Tutorial chapters">
+    <a href="#case">01 · The decision</a>
+    <a href="#setup">02 · Get ready</a>
+    <a href="#model">03 · Record the model</a>
+    <a href="#solve">04 · Choose an action</a>
+    <a href="#threshold">05 · Find the tipping point</a>
+    <a href="#research">06 · Price better information</a>
+    <a href="#sequence">07 · Research, then decide</a>
+    <a href="#memo">08 · Save the recommendation</a>
+    <a href="#revise">09 · Explain a changed belief</a>
+    <a href="#your-decision">10 · Model your own decision</a>
+    <a href="#scope">Scope &amp; reference</a>
+  </nav>
+  <p class="aside-note">Finite models · v0.2.0<br>Local files. No account needed.<br>About 20 minutes.<br><a href="assets/leg01-decision.html">Read the finished example →</a></p>
+</aside>
+<main id="main"><article>
+  <header id="top">
+    <p class="eyebrow">A worked decision, from assumptions to action</p>
+    <h1>Should we settle—or pay to learn more?</h1>
+    <p class="lede">Start with a $400,000 settlement offer. Find what would change your answer, work out whether research is worth buying, and keep a record someone else can inspect.</p>
+    <div class="actions"><a class="primary" href="#case">Work through the decision</a><a href="assets/leg01-decision.html">See the finished memo</a></div>
+    <div class="badges"><span>Runnable CLI examples</span><span>Interactive threshold preview</span><span>Frozen, replayable analyses</span></div>
+  </header>
+
+  <section id="case">
+    <p class="step">01 · Frame the decision</p>
+    <h2>A choice, an uncertainty, and a cost.</h2>
+    <p>You are helping a defendant decide whether to settle or litigate. Settlement costs $400,000. Going to trial always costs $150,000 in legal fees. A win avoids damages; a loss adds $1.2 million. The current estimate of the chance of winning is 60%.</p>
+    <div class="cards">
+      <div class="card"><span class="eyebrow">Settle</span><strong class="amount">$400,000</strong><p>A certain cost. No trial.</p></div>
+      <div class="card"><span class="eyebrow">Litigate and win · 60%</span><strong class="amount">$150,000</strong><p>Legal fees, with no damages.</p></div>
+      <div class="card"><span class="eyebrow">Litigate and lose · 40%</span><strong class="amount">$1,350,000</strong><p>Legal fees plus damages.</p></div>
+    </div>
+    <p>The immediate question is which action has the lower expected cost. The more useful questions follow: <em>How wrong could the win estimate be before the answer changes? Could a study change the choice enough to justify its cost?</em></p>
+    <div class="callout"><strong>This is a synthetic teaching case.</strong><p>All numbers are named assumptions, owned by <code>raiffa_example_author</code>. We assume risk neutrality, one valuation date, and a settlement offer that stays available during research. There are no real expert responses or forecast records behind this example.</p></div>
+    <figure><img src="assets/leg01-model.svg" alt="The choice and the uncertain trial outcome both determine the payoff. There is no information arc from the trial outcome into the choice."><figcaption>The influence diagram records what affects the payoff. The trial outcome is not known before the decision.</figcaption></figure>
+  </section>
+
+  <section id="setup">
+    <p class="step">02 · Get ready</p>
+    <h2>Install the checkout you are using.</h2>
+    <p>Use Python 3.11 or newer on macOS or Linux. From the Raiffa repository root, create an environment and install this local version. This makes the tutorial usable even before the current changes are published.</p>
+    <div class="terminal"><div class="terminal-head"><span>Setup · run from the repository root</span><button class="copy" type="button">Copy</button></div><pre><code>python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
+raiffa version
+raiffa guide</code></pre></div>
+    <p class="small">Check that <code>raiffa version</code> reports <code>0.2.0</code> or a compatible newer version. If the CLI is already installed, skip installation. This tutorial does not need EDSL, credentials, or paid execution.</p>
+    <p>Run the remaining command blocks <strong>in order, in the same terminal</strong>. They create a new <code>lawsuit/</code> directory and keep the analysis IDs in shell variables. Use a fresh parent directory if <code>lawsuit/</code> already exists.</p>
+    <details><summary>Prefer to work through a coding agent?</summary><p>Give the agent this prompt. Keep the walkthrough open to inspect its decisions.</p>
+      <div class="terminal"><div class="terminal-head"><span>Agent prompt</span><button class="copy" type="button">Copy</button></div><pre><code>Use this local Raiffa checkout to work through the synthetic LEG-01 tutorial.
+Install the package, run raiffa guide, and use raiffa next after each stage.
+Use the bundled model example; preserve its named-assumption provenance.
+Explain the settlement decision, the win-probability threshold, and the value
+of the declared study. Then evaluate the sequential study-purchase model.
+Save the decision memo. Change the base win probability to 0.85 in a new
+revision, compare the analyses, and replay the old result.
+Keep all work local. Do not invent evidence or mark the recommendation as
+an approved human decision.</code></pre></div>
+    </details>
+  </section>
+
+  <section id="model">
+    <p class="step">03 · Record the model</p>
+    <h2>Make the assumptions inspectable.</h2>
+    <p>The example ships with the package, so you do not need to find or edit a file inside its installation directory. Export a working copy, import it into a project, and check its structure and provenance.</p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · initialize and import</span><button class="copy" type="button">Copy</button></div><pre><code data-run="model">raiffa init lawsuit
+cd lawsuit
+raiffa model example --output model.json
+raiffa model import --file model.json
+raiffa model validate leg01 --strict
+raiffa next leg01</code></pre></div>
+    <div class="expected"><strong>What to look for</strong><p>Validation returns <code>valid: true</code>. <code>next</code> reports the <code>evaluate</code> phase and recommends <code>solve leg01</code>. Named assumptions remain visible as warnings; validation does not turn them into empirical evidence.</p></div>
+    <p>Open <code>model.json</code>. The win probability is a parameter, not an unexplained number embedded in a branch:</p>
+    <div class="terminal"><div class="terminal-head"><span>Excerpt · p_win</span><button class="copy" type="button">Copy</button></div><pre><code>{
+  "id": "p_win",
+  "kind": "probability",
+  "unit": "1",
+  "value": 0.6,
+  "bounds": [0, 1],
+  "provenance": {
+    "source_type": "assumption",
+    "source_refs": [],
+    "owner": "raiffa_example_author",
+    "rationale": "Synthetic probability of defendant winning; no empirical claim.",
+    "evidence_population": "not_applicable",
+    "review_status": "accepted"
+  }
+}</code></pre></div>
+    <p>The losing probability is derived as <code>1 - p_win</code>. Moving the win probability therefore updates the complementary branch too. <code>bounds</code> tells the agent workflow which sensitivity range to check.</p>
+    <p><a href="assets/leg01-model.json" download>Download the full model</a> · <a href="assets/model-2.0.schema.json" download>Download its JSON Schema</a></p>
+  </section>
+
+  <section id="solve">
+    <p class="step">04 · Choose an immediate action</p>
+    <h2>Settlement wins on expected cost.</h2>
+    <div class="formula">Trial cost = $150,000 + (1 − 0.60) × $1,200,000 = $630,000</div>
+    <p>Settlement costs $400,000, so it has a $230,000 expected-cost advantage. Raiffa maximizes payoff: costs appear as negative values. <strong>−$400,000 is preferable to −$630,000.</strong></p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · solve and preserve the analysis ID</span><button class="copy" type="button">Copy</button></div><pre><code data-run="solve">raiffa solve leg01 &gt; solve-base.json
+BASE_ANALYSIS=$(python3 -c 'import json; print(json.load(open("solve-base.json"))["data"]["analysis_id"])')
+python3 -c 'import json; d=json.load(open("solve-base.json"))["data"]; print(d["recommended_action"], d["expected_value"])'
+raiffa risk leg01 &gt; risk-base.json
+raiffa dominance leg01</code></pre></div>
+    <div class="expected"><strong>Expected result</strong><p><code>settle -400000.0</code>. First-order stochastic dominance reports no relations: litigation is better if you win and worse if you lose. A higher expected payoff is not the same as dominance.</p></div>
+    <div class="table-wrap"><table><caption>The outcome distribution of each immediate action</caption><thead><tr><th>Action</th><th>Payoff</th><th>Probability</th></tr></thead><tbody><tr><td>Settle</td><td>−$400,000</td><td>100%</td></tr><tr><td>Litigate, win</td><td>−$150,000</td><td>60%</td></tr><tr><td>Litigate, lose</td><td>−$1,350,000</td><td>40%</td></tr></tbody></table></div>
+    <p>The JSON file contains the full policy, risk profiles, assumptions, and a frozen analysis ID. Saving this response lets us report and compare that exact analysis later.</p>
+  </section>
+
+  <section id="threshold">
+    <p class="step">05 · Find the tipping point</p>
+    <h2>What would change the recommendation?</h2>
+    <p>The useful conclusion is conditional: <strong>settle unless the win probability exceeds 79.17%</strong>, holding the other inputs fixed. At the boundary the actions tie. Alternatively, holding the win probability at 60%, litigation becomes preferable if damages fall below $625,000.</p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · calculate both one-way thresholds</span><button class="copy" type="button">Copy</button></div><pre><code data-run="threshold">raiffa sensitivity one-way leg01 --param p_win --from 0 --to 1 &gt; win-threshold.json
+raiffa sensitivity one-way leg01 --param damages --from 1 --to 2000000 &gt; damages-threshold.json
+python3 -c 'import json; d=json.load(open("win-threshold.json"))["data"]; print(d["thresholds"][0]["value"])'</code></pre></div>
+    <div class="expected"><strong>Expected result</strong><p><code>0.7916666666666666</code>, or exactly 19/24 before floating-point representation. Raiffa finds the intersection of the competing affine policy values rather than returning a coarse sweep interval.</p></div>
+    <div class="lab" aria-labelledby="lab-title">
+      <h3 id="lab-title">Try a different belief.</h3><p class="small">This browser preview uses the same binary expected-cost formula. It does not edit your project or save an analysis.</p>
+      <div class="controls">
+        <div class="control"><label for="win-probability">Chance of winning: <output id="probability-value" for="win-probability">60%</output></label><input id="win-probability" type="range" min="0" max="100" step="1" value="60"></div>
+        <div class="control"><label for="damages">Damages after a loss: <output id="damages-value" for="damages">$1,200,000</output></label><input id="damages" type="range" min="100" max="2000" step="25" value="1200"></div>
+      </div>
+      <svg class="mini-chart" viewBox="0 0 730 130" role="img" aria-label="Expected costs of settlement and litigation">
+        <text x="0" y="32" fill="#24372e" font-size="15">Settle</text><rect id="settle-bar" x="95" y="10" width="304.762" height="32" rx="3" fill="#285d3b"></rect><text x="590" y="32" fill="#24372e" font-size="15">$400,000</text>
+        <text x="0" y="88" fill="#24372e" font-size="15">Litigate</text><rect id="trial-bar" x="95" y="66" width="480" height="32" rx="3" fill="#a67332"></rect><text id="trial-bar-label" x="590" y="88" fill="#24372e" font-size="15">$630,000</text>
+        <text x="95" y="125" fill="#5a685e" font-size="12">Expected cost · shorter is better</text>
+      </svg>
+      <div class="lab-result" aria-live="polite"><p class="recommendation" id="live-recommendation">Settle has the lower expected cost.</p><p>Trial expected cost: <strong id="trial-cost">$630,000</strong>.</p><p id="live-gap">Expected cost advantage: $230,000. This is not a guaranteed outcome.</p><p class="small" id="live-threshold">At these damages, the win-probability threshold is 79.17%.</p></div>
+      <button class="reset" id="reset-comparison" type="button">Reset to the example</button>
+      <noscript><p>The preview needs JavaScript; the commands and calculations in this tutorial work without it.</p></noscript>
+    </div>
+    <p>Try 85% while leaving damages at $1.2 million. Then reset and lower damages. If both inputs change, use the joint condition <code>legal_cost + (1 - p_win) × damages = settlement</code>. Separate one-way thresholds cannot simply be joined with “or” when their held-fixed assumptions no longer apply.</p>
+  </section>
+
+  <section id="research">
+    <p class="step">06 · Price better information</p>
+    <h2>Useful research changes what you do.</h2>
+    <p>First ask an idealized question: what if you could know the trial outcome before choosing? You would litigate when a win was certain and settle when a loss was certain. That policy has expected cost $250,000, improving on settlement by <strong>$150,000</strong>.</p>
+    <p>This perfect-information value is an upper bound for comparable information—not a claim that a real study can reveal a future trial result.</p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · perfect information and a feasible-study model</span><button class="copy" type="button">Copy</button></div><pre><code data-run="research">raiffa voi perfect leg01 --targets win &gt; perfect-information.json
+raiffa voi sample leg01 --study case_review &gt; study-value.json
+raiffa research agenda leg01 &gt; research-agenda.json
+python3 -c 'import json; d=json.load(open("study-value.json"))["data"]; print("Gross:", d["gross_value"], "Net:", d["net_value"])'</code></pre></div>
+    <p>The bundled <code>case_review</code> is a synthetic study with an explicit observation model. It costs $10,000 and produces a favorable or unfavorable signal before the decision:</p>
+    <div class="table-wrap"><table><caption>Study assumptions and their implied updating</caption><thead><tr><th>Quantity</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>P(favorable | win)</td><td>80%</td><td>Assumed study sensitivity.</td></tr><tr><td>P(favorable | lose)</td><td>20%</td><td>Assumed false-favorable rate.</td></tr><tr><td>P(favorable)</td><td>56%</td><td>0.60 × 0.80 + 0.40 × 0.20.</td></tr><tr><td>P(win | favorable)</td><td>85.71%</td><td>Above the 79.17% threshold: litigate.</td></tr><tr><td>P(win | unfavorable)</td><td>27.27%</td><td>Below the threshold: settle.</td></tr></tbody></table></div>
+    <div class="expected"><strong>Expected result</strong><p><code>Gross: 44000.0 Net: 34000.0</code>. The informed policy costs $356,000 on average before research expense, or $366,000 including it. Its net improvement over settling now is $34,000.</p></div>
+    <div class="callout"><strong>A study name is not enough.</strong><p>The information value depends on the likelihoods, cost, observation timing, and available actions. Raiffa cannot price a real Delphi or survey just from its label. Independent study rankings also do not establish the best combination of overlapping studies.</p></div>
+  </section>
+
+  <section id="sequence">
+    <p class="step">07 · Research, then decide</p>
+    <h2>Make “wait and learn” an actual choice.</h2>
+    <p>The second fixture puts the study purchase inside the model. First choose <code>act_now</code> or <code>study</code>. Then observe either no signal or the study result. Finally, choose settlement or litigation.</p>
+    <ol class="route" aria-label="Sequential decision"><li>Purchase research?</li><li>Observe its signal</li><li>Settle or litigate</li><li>Receive the payoff</li></ol>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · solve the contingent policy</span><button class="copy" type="button">Copy</button></div><pre><code data-run="sequence">raiffa model example --sequential --output sequential.json
+raiffa model import --file sequential.json
+raiffa solve leg01_sequential &gt; solve-sequential.json
+raiffa model compile leg01_sequential --output sequential-tree.json
+python3 -c 'import json; d=json.load(open("solve-sequential.json"))["data"]; print(d["recommended_action"], d["expected_value"])'</code></pre></div>
+    <div class="expected"><strong>Expected result</strong><p><code>study -366000.0</code>. Buy the study; litigate after a favorable signal and settle after an unfavorable one. The study cost is included in the payoff.</p></div>
+    <figure><img src="assets/leg01-sequential.svg" alt="The purchase decision and hidden trial outcome determine the signal. A dashed information arc reveals the signal before the later choice. Research expense contributes to the objective."><figcaption>The later decision can use the signal and remember the purchase decision. It cannot observe the hidden trial outcome. Earlier decisions and observations are remembered automatically.</figcaption></figure>
+    <p>The compiled tree includes possible histories, including hidden outcomes. Decisions at indistinguishable histories must use the same action. That constraint prevents a solver from “winning” by pretending to know the future.</p>
+    <p class="small">This example has no waiting cost or offer expiry. Real delay decisions need those economics recorded in a supported model. Merely placing an observation before a decision does not make waiting free in the real world.</p>
+  </section>
+
+  <section id="memo">
+    <p class="step">08 · Save the recommendation</p>
+    <h2>Deliver a result someone can inspect.</h2>
+    <p>Return to the base model. Its saved analysis provides the immediate settle/litigate recommendation; the associated challenge analyses explain when it changes and whether to buy the study. Create a memo from those frozen results.</p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · report, proposed handoff, and integrity check</span><button class="copy" type="button">Copy</button></div><pre><code data-run="memo">raiffa next leg01
+raiffa report "$BASE_ANALYSIS" --output decision-memo.html
+raiffa handoff "$BASE_ANALYSIS" --target vorhersage --output monitoring.json
+raiffa analysis replay "$BASE_ANALYSIS"
+raiffa doctor
+raiffa next leg01</code></pre></div>
+    <div class="expected"><strong>What to look for</strong><p>Replay returns <code>identical: true</code>; <code>doctor</code> returns <code>valid: true</code>; the final <code>next leg01</code> reports <code>complete</code>. Open <code>decision-memo.html</code> in your browser.</p></div>
+    <div class="actions"><a class="primary" href="assets/leg01-decision.html">Open the saved example memo</a><a href="assets/leg01-decision.html" download>Download the HTML</a></div>
+    <p>The memo includes diagrams, the policy, payoff CDFs, switching conditions, information values, and the parameter provenance inventory. The optional <code>monitoring.json</code> contains the recommendation and thresholds as a proposed local handoff.</p>
+    <p class="small">Writing that handoff does not modify Vorhersage or mean it already supports this import format. Likewise, a computed recommendation is not a recorded approval by the decision owner.</p>
+    <details><summary>What does “complete” mean?</summary><p>For the selected finite workflow: a valid current model, accepted provenance or disclosed assumptions, a current solve, sensitivity over declared parameter bounds, an agenda for declared studies, and a current HTML memo. It is not a certification that every uncertainty has been researched or that every capability in the long-term spec exists.</p></details>
+  </section>
+
+  <section id="revise">
+    <p class="step">09 · Explain a changed belief</p>
+    <h2>A recommendation should have a history.</h2>
+    <p>Suppose the win probability changes from 60% to 85%. In this exercise it is another synthetic assumption, not a newly collected forecast. Make a revised input file and change its rationale; leave the old model and analysis intact.</p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · create a new assumption revision</span><button class="copy" type="button">Copy</button></div><pre><code data-run="revise">python3 - &lt;&lt;'PY'
+import json
+from pathlib import Path
+
+model = json.loads(Path("model.json").read_text())
+parameter = next(p for p in model["parameters"] if p["id"] == "p_win")
+parameter["value"] = 0.85
+parameter["provenance"]["rationale"] = "Synthetic revised belief for the tutorial: 85% win probability."
+Path("revised-model.json").write_text(json.dumps(model, indent=2) + "\n")
+PY
+raiffa model revise leg01 --file revised-model.json --reason "Explore an 85% win belief"
+raiffa next leg01
+raiffa solve leg01 &gt; solve-revised.json
+REVISED_ANALYSIS=$(python3 -c 'import json; print(json.load(open("solve-revised.json"))["data"]["analysis_id"])')
+raiffa analysis compare "$BASE_ANALYSIS" "$REVISED_ANALYSIS" &gt; recommendation-change.json
+raiffa analysis replay "$BASE_ANALYSIS"
+python3 -c 'import json; d=json.load(open("solve-revised.json"))["data"]; print(d["recommended_action"], d["expected_value"])'</code></pre></div>
+    <div class="expected"><strong>Expected result</strong><p>The no-study recommendation flips to <code>litigate</code>, with expected payoff approximately <code>-330000.0</code>. The comparison attributes the flip to <code>p_win</code> in a counterfactual re-solve. Replaying the old analysis still returns the original settlement result.</p></div>
+    <p>Acceptance of the new revision resets the relevant workflow gates. The base memo is still an honest record of the old analysis; it is not the current recommendation. Finish the new revision’s checks and write a separate memo:</p>
+    <div class="terminal"><div class="terminal-head"><span>Terminal · finish the revised model</span><button class="copy" type="button">Copy</button></div><pre><code data-run="finish">raiffa sensitivity one-way leg01 --param p_win --from 0 --to 1 &gt; revised-threshold.json
+raiffa research agenda leg01 &gt; revised-research.json
+raiffa report "$REVISED_ANALYSIS" --output revised-decision-memo.html
+raiffa next leg01 &gt; final-state.json
+raiffa doctor</code></pre></div>
+    <p>For several simultaneous changes, read the comparison as one-at-a-time substitutions into the old model. Interactions and structural changes may prevent any single parameter from explaining the flip.</p>
+  </section>
+
+  <section id="your-decision">
+    <p class="step">10 · Move from the example to your decision</p>
+    <h2>Start with the smallest model that could change your mind.</h2>
+    <ul class="inline-list">
+      <li><strong>Name the decision and its owner.</strong> Record feasible actions, the decision date, and what the payoff means from that owner’s perspective.</li>
+      <li><strong>Separate an outcome from an observation.</strong> What can happen is not necessarily what you will know before acting.</li>
+      <li><strong>Source each number.</strong> Use a frozen evidence artifact and a record locator, or an explicit assumption with an owner and rationale. Do not replace an assumption tag with a fictitious study ID.</li>
+      <li><strong>Keep money and preferences consistent.</strong> This release uses a single valuation date and risk-neutral scalar payoffs. Do not silently substitute it for a risk-averse or multiattribute decision.</li>
+      <li><strong>Declare useful ranges and study models.</strong> Look for conditions that reverse the policy. A proposed study needs likelihoods, timing, and costs before its information value can be evaluated.</li>
+      <li><strong>Use the control loop.</strong> Run <code>raiffa next MODEL_ID</code> after a change. Preserve prior analyses and use the recommended action for the current revision.</li>
+    </ul>
+    <p>The fixture is a starting point, not a template that fits every problem. If an important feature cannot be represented within the implemented scope, record that limitation rather than force it into misleading branches.</p>
+  </section>
+
+  <section id="scope">
+    <p class="step">Reference · v0.2.0</p>
+    <h2>What is available today?</h2>
+    <div class="table-wrap"><table><thead><tr><th>Implemented</th><th>Outside this release</th></tr></thead><tbody><tr><td>Finite influence diagrams, information-aware policies, exact enumeration within explicit budgets.</td><td>Continuous Monte Carlo and large-model optimization.</td></tr><tr><td>Typed provenance, frozen source bytes, immutable revisions and replay.</td><td>Native adapters that authenticate or interpret sibling-package records.</td></tr><tr><td>Risk-neutral scalar payoffs, finite risk profiles, first-order dominance.</td><td>Nonlinear utility and multiattribute preferences.</td></tr><tr><td>Affine one-way thresholds, finite perfect information and study EVSI.</td><td>General nonlinear, two-way, or probabilistic sensitivity.</td></tr><tr><td>Local HTML/SVG/JSON reports and proposed handoff files.</td><td>EDSL instrument generation, external execution, or automatic forecast updates.</td></tr></tbody></table></div>
+    <details><summary>Command conventions and common mistakes</summary><ul class="inline-list"><li>JSON is the default. Save machine-readable responses without <code>--human</code>; application data is inside <code>data</code>.</li><li>When working outside a project, put the global flag first: <code>raiffa --project lawsuit solve leg01</code>.</li><li>Model IDs are explicit: <code>solve leg01</code>, not bare <code>solve</code>.</li><li>After importing both examples, use <code>next leg01</code> or <code>next leg01_sequential</code> to select the intended model.</li><li>Do not edit files inside <code>.raiffa/</code>. Revise an exported input and use <code>model revise</code>.</li><li><code>solve --exploratory</code> does not satisfy the normal workflow’s completion gate.</li><li>If shell variables were lost in a new terminal, recover IDs from the saved response files using the extraction commands above.</li></ul></details>
+    <p>For the packaged reference, run <code>raiffa docs show finite-models</code>. The <a href="finite-models.md">implementation notes</a> spell out solver budgets and storage behavior. The <a href="spec-v2.md">successor specification</a> also contains future design; it is not a list of available commands.</p>
+  </section>
+  <footer><p>Raiffa · Expected Parrot · Tutorial for the finite v0.2.0 workflow.</p><p>The executable command blocks are checked by <code>python3 scripts/check_tutorial.py</code> in the repository. All examples are synthetic. This page and its diagrams work locally; no external fonts, analytics, or services are loaded.</p></footer>
+</article></main>
+<div id="copy-status" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>

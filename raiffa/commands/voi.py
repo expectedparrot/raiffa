@@ -22,6 +22,9 @@ def evpi_cmd(ctx: typer.Context, tree_id: str, chance: str | None = typer.Option
     project = ctx_project(ctx)
     model = load_tree_model(project, tree_id)
     chance_nodes = [chance] if chance else [node_id for node_id, node in model.nodes.items() if node.get("type") == "chance"]
+    if len(chance_nodes) != 1:
+        from raiffa.core.errors import AnalysisError
+        raise AnalysisError("Legacy EVPI cannot sum individual information values. Import a finite decision model and use voi perfect for joint information.")
     results = [evppi(model, node_id) for node_id in chance_nodes]
     result = {"tree_id": tree_id, "chance_nodes": chance_nodes, "components": results, "expected_value_of_information": sum(item["expected_value_of_information"] for item in results)}
     if not no_write:

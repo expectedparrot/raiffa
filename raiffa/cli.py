@@ -6,12 +6,79 @@ from pathlib import Path
 from typing import Any
 
 import typer
+from typer.core import TyperGroup
+
+try:  # Typer >=0.26 vendors Click; use the exceptions its parser actually raises.
+    from typer._click.exceptions import Exit as ClickExit, UsageError
+except ImportError:
+    from click.exceptions import Exit as ClickExit, UsageError
 from rich.console import Console
 
-from raiffa.commands import analysis, docs, dominance, export, info, init, node, prob, regret, scenario, sensitivity, solve, tree, utility, voi
+from raiffa.commands import (
+    analysis,
+    docs,
+    dominance,
+    export,
+    info,
+    init,
+    node,
+    prob,
+    regret,
+    scenario,
+    sensitivity,
+    solve,
+    tree,
+    utility,
+    voi,
+)
 from raiffa.core.errors import RaiffaError
+from raiffa.decision import cli as decision
 
-app = typer.Typer(no_args_is_help=True, add_completion=False)
+
+def emit_error(code, message, details=None, command=None):
+    typer.echo(
+        json.dumps(
+            {
+                "schema_version": "raiffa.cli/1.0",
+                "ok": False,
+                "command": command or [],
+                "project_revision": None,
+                "error": {
+                    "code": code,
+                    "message": message,
+                    "details": details or {},
+                    "recoverable": code != "internal_error",
+                },
+                "warnings": [],
+                "artifacts": [],
+                "next_actions": [],
+            },
+            sort_keys=True,
+        ),
+        err=True,
+    )
+
+
+class JsonGroup(TyperGroup):
+    def parse_args(self, ctx, args):
+        try:
+            return super().parse_args(ctx, args)
+        except UsageError as exc:
+            emit_error("usage_error", exc.format_message())
+            raise ClickExit(exc.exit_code) from exc
+
+    def invoke(self, ctx):
+        try:
+            return super().invoke(ctx)
+        except RaiffaError as exc:
+            emit_error(exc.code, exc.message, exc.details)
+            raise ClickExit(exc.exit_code) from exc
+        except UsageError as exc:
+            emit_error("usage_error", exc.format_message())
+            raise ClickExit(exc.exit_code) from exc
+
+
+app = typer.Typer(no_args_is_help=True, add_completion=False, cls=JsonGroup)
 console = Console()
 
 
@@ -23,15 +90,21 @@ class CliContext:
 
 
 def emit(data: Any = None, warnings: list[dict] | None = None) -> None:
-    typer.echo(json.dumps({"data": data, "warnings": warnings or []}, indent=2, sort_keys=True))
+    typer.echo(
+        json.dumps({"data": data, "warnings": warnings or []}, indent=2, sort_keys=True)
+    )
 
 
 @app.callback()
 def callback(
     ctx: typer.Context,
-    project: Path | None = typer.Option(None, "--project", help="Override project root."),
+    project: Path | None = typer.Option(
+        None, "--project", help="Override project root."
+    ),
     human: bool = typer.Option(False, "--human", help="Use human-readable output."),
-    quiet: bool = typer.Option(False, "--quiet", help="Suppress non-data human output."),
+    quiet: bool = typer.Option(
+        False, "--quiet", help="Suppress non-data human output."
+    ),
 ) -> None:
     ctx.obj = CliContext(project=project, human=human, quiet=quiet)
 
@@ -51,22 +124,32 @@ app.command("dominance")(dominance.command)
 app.add_typer(export.app, name="export")
 app.add_typer(analysis.app, name="analysis")
 app.add_typer(docs.app, name="docs")
+app.add_typer(decision.model_app, name="model")
+app.add_typer(decision.research_app, name="research")
+app.add_typer(decision.provenance_app, name="provenance")
+app.command("version")(decision.version)
+app.command("guide")(decision.guide)
+app.command("next")(decision.next_command)
+app.command("status")(decision.next_command)
+app.command("doctor")(decision.doctor)
+app.command("history")(decision.history)
+app.command("report")(decision.report_command)
+app.command("risk")(decision.risk_command)
+app.command("handoff")(decision.handoff)
+voi.app.command("perfect")(decision.perfect_command)
+voi.app.command("sample")(decision.sample_command)
+analysis.app.command("replay")(decision.replay)
+analysis.app.command("compare")(decision.compare)
 
 
 def main() -> None:
     try:
         app()
     except RaiffaError as exc:
-        typer.echo(
-            json.dumps({"error": {"code": exc.code, "message": exc.message, "details": exc.details}}, indent=2, sort_keys=True),
-            err=True,
-        )
+        emit_error(exc.code, exc.message, exc.details)
         sys.exit(exc.exit_code)
     except Exception as exc:
-        typer.echo(
-            json.dumps({"error": {"code": "internal_error", "message": str(exc), "details": {}}}, indent=2, sort_keys=True),
-            err=True,
-        )
+        emit_error("internal_error", str(exc))
         sys.exit(1)
 
 

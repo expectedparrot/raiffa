@@ -1,0 +1,709 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://expectedparrot.github.io/raiffa/schemas/model-2.0.json",
+  "title": "Raiffa finite decision model",
+  "$defs": {
+    "expression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+            }
+          },
+          "required": [
+            "ref"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "number",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "add",
+                "subtract",
+                "multiply",
+                "divide",
+                "negate"
+              ]
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/expression"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "args"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "raiffa.model/2.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_maker": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "const": "maximize"
+        },
+        "value_nodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "minItems": 1
+        },
+        "aggregation": {
+          "const": "sum"
+        },
+        "preference_ref": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+        }
+      },
+      "required": [
+        "direction",
+        "value_nodes",
+        "aggregation",
+        "preference_ref"
+      ],
+      "additionalProperties": false
+    },
+    "valuation_context": {
+      "type": "object",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "valuation_date": {
+          "type": "string",
+          "minLength": 1
+        },
+        "price_basis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timing": {
+          "const": "single_date"
+        }
+      },
+      "required": [
+        "unit",
+        "valuation_date",
+        "price_basis",
+        "timing"
+      ],
+      "additionalProperties": false
+    },
+    "decision_order": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+      },
+      "minItems": 1
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+              },
+              "kind": {
+                "const": "decision"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 1
+              },
+              "stage": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "observes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 0
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "actions",
+              "stage",
+              "observes"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+              },
+              "kind": {
+                "const": "chance"
+              },
+              "outcomes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 1
+              },
+              "parents": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 0
+              },
+              "cpt": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "when": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "probabilities": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "ref": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                          }
+                        },
+                        "required": [
+                          "ref"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "when",
+                    "probabilities"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "outcomes",
+              "parents",
+              "cpt"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+              },
+              "kind": {
+                "const": "value"
+              },
+              "parents": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 0
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "table": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "when": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "value": {
+                      "type": "object",
+                      "properties": {
+                        "ref": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                        }
+                      },
+                      "required": [
+                        "ref"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "when",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "parents",
+              "unit",
+              "table"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "minItems": 2
+    },
+    "arcs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "kind": {
+            "enum": [
+              "dependency",
+              "information",
+              "value"
+            ]
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "kind": {
+            "enum": [
+              "probability",
+              "payoff",
+              "cost",
+              "constant"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "number"
+          },
+          "expression": {
+            "$ref": "#/$defs/expression"
+          },
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "source_type": {
+                "enum": [
+                  "elicited",
+                  "reference_class",
+                  "registered_forecast",
+                  "modeled",
+                  "literature",
+                  "assumption"
+                ]
+              },
+              "source_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 0
+              },
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_population": {
+                "enum": [
+                  "human",
+                  "simulated",
+                  "not_applicable"
+                ]
+              },
+              "review_status": {
+                "enum": [
+                  "proposed",
+                  "accepted",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "source_type",
+              "source_refs",
+              "owner",
+              "rationale",
+              "evidence_population",
+              "review_status"
+            ],
+            "additionalProperties": false
+          },
+          "bounds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "unit"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "value"
+            ],
+            "not": {
+              "required": [
+                "expression"
+              ]
+            }
+          },
+          {
+            "required": [
+              "expression"
+            ],
+            "not": {
+              "required": [
+                "value"
+              ]
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "object_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "object_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "captured_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "id",
+          "package",
+          "object_type",
+          "object_id",
+          "revision",
+          "artifact_sha256",
+          "path",
+          "locator",
+          "captured_at"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "studies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+            },
+            "minItems": 1
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+            },
+            "minItems": 1
+          },
+          "likelihood": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "when": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "probabilities": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "ref": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                      }
+                    },
+                    "required": [
+                      "ref"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "when",
+                "probabilities"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "before": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+          },
+          "cost": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+              }
+            },
+            "required": [
+              "ref"
+            ],
+            "additionalProperties": false
+          },
+          "design": {
+            "type": "string",
+            "minLength": 1
+          },
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "source_type": {
+                "enum": [
+                  "elicited",
+                  "reference_class",
+                  "registered_forecast",
+                  "modeled",
+                  "literature",
+                  "assumption"
+                ]
+              },
+              "source_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                },
+                "minItems": 0
+              },
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_population": {
+                "enum": [
+                  "human",
+                  "simulated",
+                  "not_applicable"
+                ]
+              },
+              "review_status": {
+                "enum": [
+                  "proposed",
+                  "accepted",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "source_type",
+              "source_refs",
+              "owner",
+              "rationale",
+              "evidence_population",
+              "review_status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "targets",
+          "outcomes",
+          "likelihood",
+          "before",
+          "cost",
+          "design",
+          "provenance"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "decision_maker",
+    "objective",
+    "valuation_context",
+    "decision_order",
+    "nodes",
+    "arcs",
+    "parameters",
+    "sources",
+    "studies"
+  ],
+  "additionalProperties": false
+}

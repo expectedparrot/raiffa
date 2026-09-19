@@ -30,7 +30,17 @@ def output(ctx: typer.Context, data: Any, warnings: list[dict] | None = None, hu
     if ctx.obj and ctx.obj.human:
         typer.echo(human_message or json.dumps(data, indent=2, sort_keys=True))
         return
-    typer.echo(json.dumps({"data": data, "warnings": warnings or []}, indent=2, sort_keys=True))
+    command = ctx.command_path.split()[1:]
+    action = data.get("action") if isinstance(data, dict) else None
+    revision = data.get("model_revision") if isinstance(data, dict) else None
+    artifacts = []
+    if isinstance(data, dict) and data.get("output_path"):
+        artifacts = [{"path": data["output_path"], **({"sha256": data["sha256"]} if "sha256" in data else {})}]
+    if warnings is None and isinstance(data, dict):
+        warnings = data.get("warnings", [])
+    typer.echo(json.dumps({"schema_version": "raiffa.cli/1.0", "ok": True, "command": command,
+                          "project_revision": revision, "data": data, "warnings": warnings or [],
+                          "artifacts": artifacts, "next_actions": [action] if action else []}, indent=2, sort_keys=True, allow_nan=False))
 
 
 def write_analysis(project: Project, analysis_type: str, tree_id: str, result: dict, inputs: dict | None = None, warnings: list[dict] | None = None) -> str:

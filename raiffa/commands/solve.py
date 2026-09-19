@@ -13,7 +13,15 @@ def command(
     no_write: bool = typer.Option(False, "--no-write"),
     show_policy: bool = typer.Option(False, "--show-policy"),
     explain: bool = typer.Option(False, "--explain"),
+    exploratory: bool = typer.Option(False, "--exploratory"),
 ) -> None:
+    from raiffa.decision.cli import is_decision_model, solve_command
+    if is_decision_model(ctx, tree_id):
+        if scenario:
+            from raiffa.core.errors import UserError
+            raise UserError("Decision models use immutable revisions; --scenario is for legacy trees.")
+        solve_command(ctx, tree_id, exploratory, no_write)
+        return
     project = ctx_project(ctx)
     result = solve_model(load_tree_model(project, tree_id, scenario))
     if scenario:

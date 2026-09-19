@@ -7,6 +7,12 @@ from raiffa.core.model import load_tree_model, solve_model
 
 
 def command(ctx: typer.Context, tree_id: str) -> None:
+    from raiffa.decision.cli import is_decision_model, store_for
+    from raiffa.decision.engine import dominance, solve
+    if is_decision_model(ctx, tree_id):
+        entry, model = store_for(ctx).load(tree_id, strict=True)
+        output(ctx, {"model_revision": entry["revision"], **dominance(solve(model))})
+        return
     result = solve_model(load_tree_model(ctx_project(ctx), tree_id))
     zero_probability = []
     model = load_tree_model(ctx_project(ctx), tree_id)

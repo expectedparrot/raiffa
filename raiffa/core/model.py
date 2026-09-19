@@ -336,8 +336,8 @@ def evppi(model: TreeModel, chance_node_id: str) -> dict:
     if not chance or chance.get("type") != "chance":
         raise UserError("Chance node not found.", {"node_id": chance_node_id})
     parent_id = chance.get("parent")
-    if not parent_id or model.nodes[parent_id].get("type") != "decision":
-        raise AnalysisError("V1 EVPPI requires the chance node to be a direct child of a decision node.", {"node_id": chance_node_id})
+    if parent_id != model.root_id or not parent_id or model.nodes[parent_id].get("type") != "decision":
+        raise AnalysisError("Legacy EVPPI supports only a chance node directly below the decision root. Use a finite decision model for sequential information timing.", {"node_id": chance_node_id})
     sibling_actions = model.children[parent_id]
     value_with_info = 0.0
     states = []

@@ -1,198 +1,152 @@
-# raiffa — decision-tree analysis CLI for uncertainty, rollback, and value of information
-<!-- id: raiffa/raiffa -->
+# Raiffa
 
-raiffa builds and analyzes decision trees with decision nodes, chance nodes, terminal utilities, scenarios, sensitivity sweeps, regret/dominance checks, and value-of-information calculations. The agent uses it when a user faces staged choices under uncertainty and needs expected-utility rollback, policy extraction, and transparent assumptions about probabilities and outcomes.
+**Turn sourced beliefs into an auditable decision policy.**
 
-## When to use this
-<!-- id: raiffa/when-to-use -->
+Raiffa models choices, uncertain outcomes, payoffs, and what is known when each
+choice is made. It compares admissible policies, identifies assumptions that
+could reverse the recommendation, and prices explicitly modeled research.
+Everything runs locally, with frozen inputs and replayable analyses.
 
-- The decision unfolds through choices, uncertain events, and terminal outcomes.
-- Probabilities or probability ranges can be stated for chance events.
-- Outcomes can be represented as utilities, monetary values, or a scalar preference measure.
-- The user needs rollback, sensitivity, regret, dominance, scenario comparison, or value of information.
+Version **0.2.0** implements finite discrete influence diagrams, risk-neutral
+monetary evaluation, parameter provenance, switching thresholds for affine
+policy values, exact risk profiles, and finite value-of-information models.
+Start with the [browser tutorial](docs/index.html): settle or litigate, find the
+switching threshold, price a study, and explain a changed recommendation.
+It includes copyable commands, an interactive preview, and a saved decision memo.
+See also the [worked lawsuit example](examples/leg01/README.md),
+[implementation notes](docs/finite-models.md), and [changelog](CHANGELOG.md).
 
-## When this is a stretch (and how to adapt)
-<!-- id: raiffa/when-stretch -->
+## Install
 
-- The user has many non-commensurable criteria. Use [mcda](#mcda/mcda) to define utilities or compare terminal outcomes, then use raiffa only if staged uncertainty remains central.
-- Probabilities are unknown. Use broad scenario/sensitivity ranges and report dependence on assumptions rather than inventing precision.
-- The decision is a strategic futures exercise. Use [kahn](#kahn/kahn) for scenario narratives, then raiffa for a smaller probabilistic decision model.
-- The outcome is primarily monetary cash flow. Use [dcf](#dcf/dcf) to estimate terminal values and raiffa to model staged decisions around them.
-- The tree is too large. Collapse repeated subtrees, model only decision-relevant branches, or split the problem into phases.
-
-## Decision rule for the calling agent
-<!-- id: raiffa/decision-rule -->
-
-Before dispatching to raiffa, confirm:
-
-1. The decision includes at least one choice controlled by the decision maker.
-2. At least one uncertain event affects the outcome.
-3. Terminal outcomes can be assigned scalar utility or value.
-4. The user wants a policy, sensitivity, regret, dominance, or information-value result.
-
-If yes to the first three, raiffa is the right method.
-
-## Inputs and elicitation
-<!-- id: raiffa/inputs -->
-
-### Decision structure
-<!-- id: raiffa/inputs-structure -->
-
-What it is: the sequence of decisions, chance events, and terminal outcomes.
-
-How the agent elicits this:
-- Ask: "What decision comes first, what can happen next, and what choices become available after that?"
-- Separate actions controlled by the decision maker from uncertain events.
-- Ask whether any branches are impossible or dominated before modeling.
-- Give nodes stable IDs and human-readable branch labels.
-
-Default to suggest: start with the smallest tree that captures the live decision, then add detail only where it can change the recommended policy.
-
-Fallback: if the user thinks in scenarios, sketch a scenario table first and convert only actionable branches into the tree.
-
-### Probabilities
-<!-- id: raiffa/inputs-probabilities -->
-
-What it is: probabilities on chance-node branches that sum to one at each chance node.
-
-How the agent elicits this:
-- Ask for best estimates and credible low/high ranges.
-- Ask whether probabilities are subjective, empirical, market-implied, or expert-provided.
-- Check that probabilities are conditional on the path to that chance node.
-
-Default to suggest: use base-case probabilities plus sensitivity sweeps on the most uncertain branches.
-
-Fallback: if probabilities are weak, run scenario analysis and value-of-information checks to show where better information matters.
-
-### Utilities and outcomes
-<!-- id: raiffa/inputs-utilities -->
-
-What it is: scalar utility or value assigned to terminal nodes.
-
-How the agent elicits this:
-- Ask whether terminal outcomes are monetary, utility-scaled, or scored from another method.
-- Ask whether risk neutrality is acceptable; if not, discuss utility transformation.
-- Ask whether costs of information, delay, or implementation should be included.
-
-Default to suggest: monetary value for financial decisions; normalized utility for mixed outcomes.
-
-Fallback: use [mcda](#mcda/mcda) to score terminal outcomes when values are not naturally scalar.
-
-## Outputs
-<!-- id: raiffa/outputs -->
-
-raiffa produces:
-
-- `.raiffa/` project state with trees, nodes, probabilities, utilities, scenarios, and analysis snapshots.
-- Expected-utility rollback results and optimal policy by decision node.
-- Sensitivity sweeps over probability or utility parameters.
-- Value-of-information calculations for chance events.
-- Regret and dominance analysis across available actions.
-- Exports such as JSON snapshots or diagram-friendly representations.
-
-## Workflow
-<!-- id: raiffa/workflow -->
-
-Canonical sequence:
-
-1. `raiffa init` — create the project.
-2. `raiffa tree ...` — create or select the decision tree.
-3. `raiffa node ...` — add decision, chance, and terminal nodes.
-4. `raiffa prob ...` — assign probabilities to chance branches.
-5. `raiffa utility ...` — assign terminal values.
-6. `raiffa solve` — perform expected-utility rollback.
-7. `raiffa sensitivity ...` — sweep key probabilities or utilities.
-8. `raiffa voi ...` — compute value of information where relevant.
-9. `raiffa regret` and `raiffa dominance` — inspect robustness of choices.
-10. `raiffa scenario ...` and `raiffa analysis ...` — save and compare analysis states.
-11. `raiffa export ...` — emit downstream artifacts.
-
-Use `raiffa info` to recover current project state.
-
-## Worked examples
-<!-- id: raiffa/examples -->
-
-### Settling or litigating
-<!-- id: raiffa/example-settle-litigate -->
-
-User: "Should we settle a dispute or litigate?"
-
-Agent: "Raiffa fits because this is a choice under uncertainty. We need settlement cost, litigation win/loss probabilities, legal costs, and terminal payoffs. If the win probability is uncertain, I’ll run a sensitivity sweep."
-
-User: "Settlement costs $400k. Litigation costs $150k. Win probability maybe 60%; winning saves $1M, losing costs $1.2M."
-
-Agent: "I’ll build a decision node for settle vs litigate, a chance node for win/loss under litigation, solve expected value, then sweep win probability."
+Python 3.11 or newer on macOS or Linux is required. The revision store uses POSIX
+file locking. No account, API key, EDSL installation, or network service is needed
+for the finite decision workflow.
 
 ```bash
-raiffa init dispute
-raiffa tree create legal_dispute
-raiffa node decision root --label "Settle or litigate"
-raiffa node terminal settle --utility -400000
-raiffa node chance trial --label "Trial outcome"
-raiffa node terminal win --utility 850000
-raiffa node terminal lose --utility -1350000
-raiffa prob set trial win 0.60
-raiffa prob set trial lose 0.40
-raiffa solve
-raiffa sensitivity run --parameter probability:trial.win --low 0.35 --high 0.80
+uv tool install 'git+https://github.com/expectedparrot/raiffa.git'
+raiffa version
+raiffa guide
 ```
 
-Output: optimal policy, expected values, and a break-even probability view.
-
-### Checking value of information
-<!-- id: raiffa/example-voi -->
+For this checkout, including changes not yet published to GitHub:
 
 ```bash
-raiffa solve
-raiffa voi run --chance-node demand
-raiffa analysis list
+python -m pip install -e '.[dev]'
+raiffa version
+python -m pytest -q
 ```
 
-Output: estimated value of learning the demand state before committing to a decision.
+You can also run the CLI as `python -m raiffa.cli` after installing dependencies.
+An installed wheel includes the synthetic fixtures: run
+`raiffa model example --output model.json` (or add `--sequential`).
 
-## Quick command reference
-<!-- id: raiffa/commands -->
+## Copy into a coding agent
 
-For full options, run `raiffa <subcommand> --help`.
+```text
+Help me analyze this decision with Raiffa in this checkout.
+Install the local package with python -m pip install -e . and run raiffa guide.
+Establish the decision maker, choices, horizon, payoff basis, and what can be
+observed before each decision. Inspect raiffa model schema and the LEG-01 example.
+Build the smallest supported finite model that represents the decision.
+Every belief and payoff needs provenance, or a named assumption with an owner
+and rationale. Do not invent sources or treat simulated responses as human ones.
+Use raiffa next after each material step and follow its action until the selected
+workflow is complete or input or unsupported capabilities prevent progress.
+Keep the versioned JSON output for parsing. Review switching conditions and the
+value of any declared study; do not assign study effectiveness without evidence
+or an explicit assumption. Write the local decision memo and retain its model
+revision and analysis ID. A model recommendation does not record my approval.
+```
 
-| Command | Purpose |
-|---|---|
-| `raiffa init` / `info` | Initialize or summarize a project. |
-| `raiffa tree ...` | Manage decision trees. |
-| `raiffa node ...` | Add and inspect decision, chance, and terminal nodes. |
-| `raiffa prob ...` | Set or inspect chance probabilities. |
-| `raiffa utility ...` | Set terminal utilities or values. |
-| `raiffa solve` | Run expected-utility rollback. |
-| `raiffa sensitivity ...` | Sweep probability or utility parameters. |
-| `raiffa voi ...` | Estimate value of information. |
-| `raiffa regret` / `dominance` | Analyze robustness and dominated actions. |
-| `raiffa scenario ...` | Manage scenario assumptions. |
-| `raiffa analysis ...` | Inspect saved analysis snapshots. |
-| `raiffa export ...` | Emit downstream artifacts. |
-| `raiffa docs` | Read built-in guidance. |
+## A complete example
 
-## Common pitfalls
-<!-- id: raiffa/pitfalls -->
+From the repository root:
 
-- Probabilities at each chance node must be conditional on reaching that node and sum to one.
-- Utilities should be comparable across terminal nodes; mixing dollars and ordinal scores breaks rollback.
-- Large trees can obscure the live decision; model detail only where it can affect the optimal policy.
-- Sensitivity is not optional when probabilities are subjective.
-- Value of information must be compared to the cost and feasibility of acquiring that information.
+```bash
+raiffa init lawsuit
+raiffa --project lawsuit model import --file examples/leg01/model.json
+raiffa --project lawsuit solve leg01
+raiffa --project lawsuit sensitivity one-way leg01 --param p_win --from 0 --to 1
+raiffa --project lawsuit voi perfect leg01 --targets win
+raiffa --project lawsuit research agenda leg01
+raiffa --project lawsuit next
+```
 
-## Cross-references
-<!-- id: raiffa/xrefs -->
+`next` supplies the report command with the concrete analysis ID. The synthetic
+case recommends settling at a cost of $400,000 instead of litigating at expected
+cost $630,000. The immediate decision switches at a win probability of 19/24.
+A declared $10,000 study has gross information value $44,000 and net value
+$34,000. These are validation inputs and outputs, not a real legal assessment.
 
-- Upstream: [dcf](#dcf/dcf) can provide monetary values for terminal outcomes; [kahn](#kahn/kahn) can identify plausible futures before probabilistic modeling.
-- Adjacent methods: [mcda](#mcda/mcda) for non-commensurable criteria; [premortem](#premortem/premortem) for failure-mode discovery before modeling.
-- Reporting: [gutenberg](#gutenberg/gutenberg), [herndon](#herndon/herndon), and [sonesta](#sonesta/sonesta) can package results.
+The [sequential fixture](examples/leg01/sequential.json) explicitly models
+“purchase research, observe its signal, then decide.” Its optimal expected
+payoff is -$366,000, including the study cost. Hidden trial outcomes never become
+available to the decision policy merely because the solver enumerates them.
 
-## State contract
-<!-- id: raiffa/state -->
+## Workflow and commands
 
-`.raiffa/` stores project metadata, tree definitions, nodes, probabilities, utilities, scenarios, and analysis snapshots. Tree structure and assumptions are the source of truth; analysis outputs are reproducible from that state. Agents should modify tree state through CLI commands and rerun `raiffa solve` after assumption changes.
+Global `--project PATH` goes **before** the subcommand. JSON is the default;
+`--human` changes presentation.
 
-## JSON output and error codes
-<!-- id: raiffa/json -->
+| Task | Commands |
+| --- | --- |
+| Start and resume | `init`, `guide`, `next [MODEL]`, `status [MODEL]`, `version`, `doctor` |
+| Define a model | `model schema`, `model import --file PATH`, `model show MODEL`, `model validate MODEL --strict` |
+| Revise and compile | `model revise MODEL --file PATH --reason TEXT`, `model compile MODEL --output PATH` |
+| Evaluate | `solve MODEL`, `risk MODEL`, `dominance MODEL` |
+| Challenge | `sensitivity one-way MODEL --param ID --from X --to Y` |
+| Price information | `voi perfect MODEL [--targets IDS] [--before DECISION]`, `voi sample MODEL --study ID`, `research agenda MODEL` |
+| Inspect evidence and history | `provenance check MODEL`, `history`, `analysis list`, `analysis show ID`, `analysis compare BEFORE AFTER`, `analysis replay ID` |
+| Deliver | `report ANALYSIS --format html\|svg\|json --output PATH`, `handoff ANALYSIS --target treffen\|vorhersage --output PATH` |
 
-raiffa uses structured output by default unless `--human` is requested. Common recoverable errors include invalid IDs, missing root/tree selection, incomplete probabilities, probabilities that do not sum to one, missing terminal utilities, unreachable nodes, and analysis precondition failures.
+Normal solves reject missing or unaccepted provenance. Complete named assumptions
+are allowed and disclosed. `solve --exploratory` evaluates draft provenance with
+warnings and cannot complete the normal agent workflow.
+
+## State and output contract
+
+`.raiffa/` contains immutable model revisions, copied source artifacts, frozen
+analyses, and derived reports. Revisions are hash-linked and serialized with a
+workspace lock. A new accepted revision invalidates the previous revision's
+completion state. Analyses retain their original inputs and engine version.
+
+Commands return a versioned envelope:
+
+```json
+{
+  "schema_version": "raiffa.cli/1.0",
+  "ok": true,
+  "command": ["next"],
+  "project_revision": null,
+  "data": {},
+  "warnings": [],
+  "artifacts": [],
+  "next_actions": []
+}
+```
+
+Failures use structured `error` instead of `data` on stderr and exit nonzero.
+The `next` action includes argv, project context, missing inputs, and mutation
+metadata. Reports write to an explicit output path and are deterministic for the
+same frozen analysis, challenge artifacts, and renderer version.
+
+## Scope and compatibility
+
+The solver deliberately bounds enumeration and rejects models exceeding its
+policy/world budget. It currently supports one valuation date, additive scalar
+payoffs, risk neutrality, finite CPTs, and perfect recall. Unsupported memory,
+distributions, nonlinear utility, and non-affine threshold problems fail rather
+than being approximated silently.
+
+Source references preserve artifact bytes and hashes. They do not authenticate
+an upstream claim or establish that an assumption is empirically justified.
+Named adapters for Helmer, Flyvbjerg, Vorhersage, Burr, Kahn, Premortem, Dewey,
+Epiq, and Treffen are **not implemented**. Handoffs are proposed local JSON
+contracts; they do not modify other packages. EDSL instrument generation,
+continuous Monte Carlo, and general nonlinear sensitivity remain future work.
+
+The older `tree`, `node`, `prob`, `utility`, and `scenario` commands still operate
+on legacy tree projects. Those commands do not acquire provenance automatically.
+Their bundled documentation is labeled as legacy; use `model` for new auditable
+work. The [successor specification](docs/spec-v2.md) describes the longer-term
+direction and the implemented subset is documented separately.

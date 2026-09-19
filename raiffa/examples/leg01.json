@@ -1,0 +1,384 @@
+{
+  "schema_version": "raiffa.model/2.0",
+  "id": "leg01",
+  "title": "LEG-01: settle, litigate, or research first?",
+  "decision_maker": "Synthetic defendant",
+  "objective": {
+    "direction": "maximize",
+    "value_nodes": [
+      "payoff"
+    ],
+    "aggregation": "sum",
+    "preference_ref": "risk_neutral"
+  },
+  "valuation_context": {
+    "unit": "USD",
+    "valuation_date": "2026-09-19",
+    "price_basis": "Synthetic constant dollars",
+    "timing": "single_date"
+  },
+  "decision_order": [
+    "choice"
+  ],
+  "nodes": [
+    {
+      "id": "win",
+      "kind": "chance",
+      "outcomes": [
+        "yes",
+        "no"
+      ],
+      "parents": [],
+      "cpt": [
+        {
+          "when": {},
+          "probabilities": {
+            "yes": {
+              "ref": "p_win"
+            },
+            "no": {
+              "ref": "p_lose"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice",
+      "kind": "decision",
+      "actions": [
+        "settle",
+        "litigate"
+      ],
+      "stage": 0,
+      "observes": []
+    },
+    {
+      "id": "payoff",
+      "kind": "value",
+      "parents": [
+        "choice",
+        "win"
+      ],
+      "unit": "USD",
+      "table": [
+        {
+          "when": {
+            "choice": "settle",
+            "win": "yes"
+          },
+          "value": {
+            "ref": "settle_payoff"
+          }
+        },
+        {
+          "when": {
+            "choice": "settle",
+            "win": "no"
+          },
+          "value": {
+            "ref": "settle_payoff"
+          }
+        },
+        {
+          "when": {
+            "choice": "litigate",
+            "win": "yes"
+          },
+          "value": {
+            "ref": "win_payoff"
+          }
+        },
+        {
+          "when": {
+            "choice": "litigate",
+            "win": "no"
+          },
+          "value": {
+            "ref": "lose_payoff"
+          }
+        }
+      ]
+    }
+  ],
+  "arcs": [
+    {
+      "from": "choice",
+      "to": "payoff",
+      "kind": "value"
+    },
+    {
+      "from": "win",
+      "to": "payoff",
+      "kind": "value"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "risk_neutral",
+      "kind": "constant",
+      "unit": "1",
+      "value": 1,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic decision maker maximizes expected monetary payoff.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "p_win",
+      "kind": "probability",
+      "unit": "1",
+      "value": 0.6,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic probability of defendant winning; no empirical claim.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      },
+      "bounds": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "p_lose",
+      "kind": "probability",
+      "unit": "1",
+      "expression": {
+        "op": "subtract",
+        "args": [
+          1,
+          {
+            "ref": "p_win"
+          }
+        ]
+      },
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Win and lose exhaust the synthetic outcome space.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "settlement",
+      "kind": "cost",
+      "unit": "USD",
+      "value": 400000,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic settlement cost.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "legal_cost",
+      "kind": "cost",
+      "unit": "USD",
+      "value": 150000,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic legal cost paid on either trial outcome.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "damages",
+      "kind": "cost",
+      "unit": "USD",
+      "value": 1200000,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic damages payable only after losing.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "settle_payoff",
+      "kind": "payoff",
+      "unit": "USD",
+      "expression": {
+        "op": "negate",
+        "args": [
+          {
+            "ref": "settlement"
+          }
+        ]
+      },
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Settlement is a cost to the defendant.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "win_payoff",
+      "kind": "payoff",
+      "unit": "USD",
+      "expression": {
+        "op": "negate",
+        "args": [
+          {
+            "ref": "legal_cost"
+          }
+        ]
+      },
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Winning avoids damages but still incurs legal cost.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "lose_payoff",
+      "kind": "payoff",
+      "unit": "USD",
+      "expression": {
+        "op": "subtract",
+        "args": [
+          {
+            "ref": "win_payoff"
+          },
+          {
+            "ref": "damages"
+          }
+        ]
+      },
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Losing incurs legal cost plus damages.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "signal_hit",
+      "kind": "probability",
+      "unit": "1",
+      "value": 0.8,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic likelihood of a favorable signal conditional on winning.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "signal_miss",
+      "kind": "probability",
+      "unit": "1",
+      "expression": {
+        "op": "subtract",
+        "args": [
+          1,
+          {
+            "ref": "signal_hit"
+          }
+        ]
+      },
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic complementary likelihood; same accuracy in either state.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    },
+    {
+      "id": "study_cost",
+      "kind": "cost",
+      "unit": "USD",
+      "value": 10000,
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic study cost; no delay, offer expiry, or other timing costs.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      }
+    }
+  ],
+  "sources": [],
+  "studies": [
+    {
+      "id": "case_review",
+      "targets": [
+        "win"
+      ],
+      "outcomes": [
+        "favorable",
+        "unfavorable"
+      ],
+      "before": "choice",
+      "cost": {
+        "ref": "study_cost"
+      },
+      "design": "Synthetic finite signal; settlement remains available; no delay costs.",
+      "provenance": {
+        "source_type": "assumption",
+        "source_refs": [],
+        "owner": "raiffa_example_author",
+        "rationale": "Synthetic study design for validation, not a real study effectiveness claim.",
+        "evidence_population": "not_applicable",
+        "review_status": "accepted"
+      },
+      "likelihood": [
+        {
+          "when": {
+            "win": "yes"
+          },
+          "probabilities": {
+            "favorable": {
+              "ref": "signal_hit"
+            },
+            "unfavorable": {
+              "ref": "signal_miss"
+            }
+          }
+        },
+        {
+          "when": {
+            "win": "no"
+          },
+          "probabilities": {
+            "favorable": {
+              "ref": "signal_miss"
+            },
+            "unfavorable": {
+              "ref": "signal_hit"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

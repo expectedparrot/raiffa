@@ -4,13 +4,18 @@ import re
 from importlib import resources
 
 DOCS: dict[str, dict] = {
+    "finite-models": {
+        "title": "Finite decision models (0.2.0)",
+        "summary": "The implemented provenance-aware model workflow, solver limits, and CLI.",
+        "file": "finite-models.md",
+    },
     "overview": {
-        "title": "Package Overview",
+        "title": "Legacy tree overview",
         "summary": "What raiffa does, when to use it, core concepts, and output format.",
         "file": "overview.md",
     },
     "getting-started": {
-        "title": "Getting Started",
+        "title": "Legacy tree quickstart",
         "summary": "Complete worked example: init, tree construction, solve, sensitivity, and VOI.",
         "file": "getting-started.md",
     },
@@ -25,8 +30,8 @@ DOCS: dict[str, dict] = {
         "file": "best-practices.md",
     },
     "cli-reference": {
-        "title": "CLI Quick Reference",
-        "summary": "All commands with syntax, flags, and examples.",
+        "title": "Legacy tree CLI reference",
+        "summary": "Legacy commands with syntax, flags, and examples; use guide for finite models.",
         "file": "cli-reference.md",
     },
 }

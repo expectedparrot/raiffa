@@ -18,6 +18,10 @@ def one_way(
     steps: int = typer.Option(11, "--steps"),
     no_write: bool = typer.Option(False, "--no-write"),
 ) -> None:
+    from raiffa.decision.cli import is_decision_model, sensitivity_command
+    if is_decision_model(ctx, tree_id):
+        sensitivity_command(ctx, tree_id, param, start, stop, no_write)
+        return
     project = ctx_project(ctx)
     result = one_way_sensitivity(load_tree_model(project, tree_id), param, start, stop, steps)
     if not no_write:

@@ -1,5 +1,8 @@
 # CLI Quick Reference
 
+This page describes legacy tree commands. For provenance-aware finite models,
+start with `raiffa guide`, `raiffa model schema`, and `raiffa next`.
+
 > **Two things to remember before every command:**
 >
 > 1. **`--project` is a global flag — it goes BEFORE the subcommand.**
@@ -44,12 +47,13 @@ Show project metadata and artifact counts.
 raiffa --project <dir> info
 ```
 
-### `raiffa status`
+### `raiffa next` / `raiffa status`
 
-Bootstrap payload for agents: operating rules, project state, and recommended next steps.
+Inspect the finite model workflow and its next required action. Use `raiffa guide`
+for operating rules; these commands do not infer provenance for legacy trees.
 
 ```bash
-raiffa --project <dir> agent-start [--include-guide | --no-guide]
+raiffa --project <dir> next [model_id]
 ```
 
 ---

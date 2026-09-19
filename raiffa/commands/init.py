@@ -17,8 +17,11 @@ def command(
     title: str | None = typer.Option(None, "--title"),
     description: str = typer.Option("", "--description"),
 ) -> None:
-    target = Path.cwd() if here else Path(name)
+    override = ctx.obj.project if ctx.obj else None
+    target = (override or Path.cwd()) if here else Path(name)
     project_id_source = name if here else Path(name).name
+    if project_id_source in ("", "."):
+        project_id_source = target.resolve().name
     project_id = validate_id(project_id_source, "project id")
     project = create_project(target)
     meta = {

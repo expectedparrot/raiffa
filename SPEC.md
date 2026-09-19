@@ -1,5 +1,11 @@
 # Raiffa CLI Specification
 
+> Historical tree-CLI design. The proposed successor is
+> [Raiffa: auditable decisions from elicited beliefs](docs/spec-v2.md), which
+> defines influence diagrams, parameter provenance, agent workflows, integration
+> contracts, and staged release gates. The implemented finite 0.2.0 subset is
+> documented in [docs/finite-models.md](docs/finite-models.md).
+
 `raiffa` is a JSON-first command-line tool for building, validating, solving, and
 stress-testing decision-analysis models in the tradition of Howard Raiffa. It is designed
 for agents and humans who need to make assumptions explicit, compare choices under

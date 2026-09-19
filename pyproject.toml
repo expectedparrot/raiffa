@@ -4,16 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raiffa"
-version = "0.1.0"
-description = "JSON-first CLI for decision analysis"
+version = "0.2.0"
+description = "Auditable finite decision models with parameter provenance and value of information"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Expected Parrot, Inc."}]
 requires-python = ">=3.11"
 dependencies = [
-  "rich",
-  "typer"
+  "rich>=13.7,<15",
+  "typer>=0.12,<1",
+  "jsonschema>=4.20,<5"
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest>=8,<10", "build>=1,<2", "ruff>=0.6"]
+
+[project.urls]
+Repository = "https://github.com/expectedparrot/raiffa"
+Issues = "https://github.com/expectedparrot/raiffa/issues"
 
 [project.scripts]
 raiffa = "raiffa.cli:main"
@@ -25,7 +33,7 @@ include-package-data = true
 include = ["raiffa*"]
 
 [tool.setuptools.package-data]
-raiffa = ["docs_content/*.md"]
+raiffa = ["docs_content/*.md", "schemas/*.json", "examples/*.json"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
